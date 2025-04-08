@@ -1,5 +1,5 @@
 
-import type { OnRun } from "../queue/types.ts";
+
 import type { DdtDialectDatabaseMap } from "@andyrmitchell/drizzle-dialect-types";
 
 
@@ -20,13 +20,3 @@ export type QueueItemDB = {
     started_at?: number,
     completed_at: number,
 }
-
-export type JobItem = {
-    job_id: string,
-    created_at: number,
-	resolve: Function,
-	reject: Function,
-    onRun: OnRun,
-    running?: boolean,
-    descriptor?: string
-};

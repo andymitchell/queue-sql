@@ -6,14 +6,14 @@ import pgTableCreatorWithSchema from "./pgTableCreatorWithSchema.ts";
 
 export function queueTableCreatorPg(id:string, schema?:string) {
 
-    return pgTableCreatorWithSchema(schema)("queue_"+id, {
+    return pgTableCreatorWithSchema(schema)(`${id}_queue`, {
         id: pg.integer().primaryKey().generatedAlwaysAsIdentity(),
         queue_id: pg.text().notNull(),
         item: pg.jsonb().notNull(),
         updated_at_ts: pg.timestamp().notNull().defaultNow(),//.default(sql`(strftime('%s', 'now'))`),
     }, (table) => {
         return [
-            pg.index(`queue_${id}_updated_at_idx`).on(table.updated_at_ts)
+            pg.index(`${id}_queue_updated_at_idx`).on(table.updated_at_ts)
         ]
     });
 }
