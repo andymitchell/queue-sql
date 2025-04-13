@@ -38,7 +38,7 @@
     "node": ">=19.0.0"
   },
   "devDependencies": {
-    "@andyrmitchell/drizzle-fast-bulk-test": "^0.1.6",
+    "@andyrmitchell/drizzle-fast-bulk-test": "^0.2.2",
     "@andyrmitchell/file-io": "^0.10.12",
     "@electric-sql/pglite": "^0.2.14",
     "@libsql/client": "^0.14.0",

@@ -1,4 +1,4 @@
-import { TestSqlDbGenerator, createSchemaDefinitionFile, type DdtSqliteDriver, type DdtDialectDatabaseMap } from "@andyrmitchell/drizzle-fast-bulk-test";
+import { DrizzleFastBulkTestGenerator, createSchemaDefinitionFile,  type DdtDialectDatabaseMap, type DdtDialectDriver, type ExpectedDb } from "@andyrmitchell/drizzle-fast-bulk-test";
 import type { QueueTable } from "./table-creators/types.ts";
 import { queueTableCreatorPg } from "./table-creators/queue.pg.ts";
 import { queueTableCreatorSqlite } from "./table-creators/queue.sqlite.ts";
@@ -10,29 +10,31 @@ import type { DdtDialect } from "@andyrmitchell/drizzle-dialect-types";
 type RawStoreTestSqlDb<D extends DdtDialect = DdtDialect> = {instance_id: number, db:DdtDialectDatabaseMap[D], schemas: QueueTable[D], used?: boolean};
 
 type RawStoreTestSqlDbGeneratorOptions = {
-    dialect?: DdtDialect,
-    batch_size?: number, 
-    sqlite_driver?: DdtSqliteDriver | null
+    db: ExpectedDb,
+    batch_size?: number
 }
 
-export class RawStoreTestSqlDbGenerator<D extends DdtDialect = DdtDialect> {
+export class RawStoreTestSqlDbGenerator<D extends DdtDialect = DdtDialect, DR extends DdtDialectDriver = DdtDialectDriver> {
 
     #options:Required<RawStoreTestSqlDbGeneratorOptions>;
-    #testSqlDbGenerator:TestSqlDbGenerator<D, QueueTable[D]>;
+    #testSqlDbGenerator:DrizzleFastBulkTestGenerator<D, DR, QueueTable[D]>;
     
 
     constructor(testDirAbsolutePath:string, options?: RawStoreTestSqlDbGeneratorOptions) {
 
         this.#options = {
-            dialect: 'pg',
+            
+            db: {
+                dialect: 'pg',
+                driver: 'pglite'
+            },
             batch_size: 1,
-            sqlite_driver: null,
             ...options
         }
 
         let creatorFn:string;
         let linkFile:string;
-        switch(this.#options.dialect) {
+        switch(this.#options.db.dialect) {
             case 'pg':
                 creatorFn = 'queueTableCreatorPg'
                 linkFile = 'queue.pg.ts'
@@ -46,12 +48,11 @@ export class RawStoreTestSqlDbGenerator<D extends DdtDialect = DdtDialect> {
         }
 
 
-        this.#testSqlDbGenerator = new TestSqlDbGenerator<D, QueueTable[D]>(
+        this.#testSqlDbGenerator = new DrizzleFastBulkTestGenerator<D, DR, QueueTable[D]>(
             testDirAbsolutePath, 
             {
-                dialect: this.#options.dialect,
+                db: this.#options.db,
                 batch_size: this.#options.batch_size,
-                sqlite_driver: this.#options.sqlite_driver? this.#options.sqlite_driver : undefined,
                 generate_schemas_for_batch: async (batchPositions, batchTestDirAbsolutePath) => {
                     
                     const partitioned_schemas = batchPositions.map(batch_position => {
@@ -59,7 +60,7 @@ export class RawStoreTestSqlDbGenerator<D extends DdtDialect = DdtDialect> {
                         return {
                             batch_position,
                             store_id: storeId,
-                            schemas: this.#options.dialect==='pg'? queueTableCreatorPg(storeId) : queueTableCreatorSqlite(storeId)
+                            schemas: this.#options.db.dialect==='pg'? queueTableCreatorPg(storeId) : queueTableCreatorSqlite(storeId)
                         }
                     })
 
