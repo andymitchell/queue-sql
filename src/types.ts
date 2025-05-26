@@ -13,6 +13,7 @@ export type QueueItemDB = {
     ts: number,
     client_id: string, 
     job_id: string,
+    attempts: number,
     client_id_job_count: number,
     descriptor?: string,
     run_id?: string,

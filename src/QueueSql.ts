@@ -13,7 +13,7 @@
 
 import { eq, and, SQL, gte } from "drizzle-orm";
 import type { GenericDatabase, QueueItemDB } from "./types.ts";
-import { mergeWith } from "lodash-es";
+import { merge, mergeWith } from "lodash-es";
 import type { QueueTable } from "./table-creators/types.ts";
 import { robustTransaction } from "@andyrmitchell/drizzle-robust-transaction";
 import { PostgresJsDatabase } from "drizzle-orm/postgres-js";
@@ -240,6 +240,31 @@ class QueueIoSql<D extends DdtDialect> implements IQueueIo {
             return true;
 
 
+
+        }
+
+        return false;
+    }
+
+    async incrementAttempts(itemId: number, db?: GenericDatabase) {
+        db = db ?? await this.#db;
+
+        let item = await this.#getItem(itemId, db);
+        if (item) {
+            
+            merge<QueueItemDB, Partial<QueueItemDB>>(item, {attempts: item.attempts+1})
+
+            await db
+                .update(this.#queueSchema)
+                .set({
+                    item,
+                    updated_at_ts: new Date()
+                })
+                .where(this.#whereItem(itemId))
+
+            this.emitter.emit('MODIFIED');
+
+            return true;
 
         }
 

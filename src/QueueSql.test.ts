@@ -20,7 +20,10 @@ beforeAll(() => {
 const tdbgPg = new RawStoreTestSqlDbGenerator<'pg'>(
     TESTDIR, 
     {
-        dialect: 'pg', 
+        db: {
+            dialect: 'pg',
+            driver: 'pglite'
+        },
         batch_size: 50
     });
 let queueSqlsPg:Record<string, Promise<QueueSql>> = {};
@@ -42,7 +45,11 @@ async function newQueueSqlPg(queueName:string):Promise<QueueSql> {
 const tdbgSqlite = new RawStoreTestSqlDbGenerator<'sqlite'>(
     TESTDIR, 
     {
-        dialect: 'sqlite', 
+        //dialect: 'sqlite', 
+        db: {
+            dialect: 'sqlite',
+            driver: 'better-sqlite3'
+        },
         batch_size: 50
     });
 let queueSqlsSqlite:Record<string, Promise<QueueSql>> = {};
@@ -117,7 +124,10 @@ test('postgres-rmw works', async () => {
     const tdbgPg = new RawStoreTestSqlDbGenerator<'pg'>(
         TESTDIR, 
         {
-            dialect: 'pg', 
+            db: {
+                dialect: 'pg',
+                driver: 'pglite'
+            },
             batch_size: 50
         })
     const {db, schemas} = await tdbgPg.nextTest();
@@ -137,7 +147,11 @@ test('basic queue operation', async () => {
     const tdbgPg = new RawStoreTestSqlDbGenerator(
         TESTDIR, 
         {
-            dialect: 'pg', 
+            
+            db: {
+                dialect: 'pg',
+                driver: 'pglite'
+            },
             batch_size: 50
         })
     const {db, schemas} = await tdbgPg.nextTest();
