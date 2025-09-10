@@ -1,6 +1,6 @@
 {
   "name": "@andyrmitchell/queue-sql",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Queue function execution using sql to manage it. This is NOT a full job queue, it just enforces linearity in one apps execution path.",
   "type": "module",
   "exports": {
