@@ -332,35 +332,23 @@ class QueueIoSql<D extends DdtDialect> implements IQueueIo {
     }
 
 
-    async dispose(clientId: string, timeoutMs = 1000*20) {
+    async dispose(clientId: string, progressTracker:string[]) {
         this.#disposed = true;
-        let progress:string[] = [];
-        const pwt = promiseWithTrigger<void>(timeoutMs);
 
-        (async () => {
-            if (this.#nextPoll) {
-                clearTimeout(this.#nextPoll);
-            }
-
-            progress.push('cleared next poll');
-            
-            const db = await this.#db;
-            progress.push('retrieved db');
-            await db
-                .delete(this.#queueSchema)
-                .where(eq(this.#queueSchema.queue_id, this.#id));
-        
-            progress.push('complete');
-
-            pwt.trigger();
-        })();
-
-
-        try {
-            await pwt.promise;
-        } catch(e) {
-            throw new Error(`QueueSql dispose timed out. Progress: ${progress.join()}`)
+    
+        if (this.#nextPoll) {
+            clearTimeout(this.#nextPoll);
         }
+
+        progressTracker.push('cleared next poll');
+        
+        const db = await this.#db;
+        progressTracker.push('retrieved db');
+        await db
+            .delete(this.#queueSchema)
+            .where(eq(this.#queueSchema.queue_id, this.#id));
+    
+        progressTracker.push('deleted from db');
 
     }
 
