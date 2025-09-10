@@ -21,6 +21,7 @@ import type { DdtDialect, DdtDialectDatabaseMap } from "@andyrmitchell/drizzle-d
 import { BaseItemQueue, type IQueue, type IQueueIo, type QueueIoEvents } from "@andyrmitchell/utils/queue";
 import { TypedCancelableEventEmitter } from "@andyrmitchell/utils/typed-cancelable-event-emitter";
 import { uid } from "@andyrmitchell/utils/uid";
+import { promiseWithTrigger } from "@andyrmitchell/utils";
 
 
 
@@ -121,6 +122,7 @@ class QueueIoSql<D extends DdtDialect> implements IQueueIo {
 
     async listItems(options?: { updated_after?: Date }) {
         const db = await this.#db;
+        if (this.#disposed) return [];
 
         let where: SQL = eq(this.#queueSchema.queue_id, this.#id);
         if (options?.updated_after) {
@@ -148,6 +150,7 @@ class QueueIoSql<D extends DdtDialect> implements IQueueIo {
         
         await robustTransaction(db, async tx => {
           
+            if (this.#disposed) return;
 
             const rows = await tx
                 .select({
@@ -219,6 +222,8 @@ class QueueIoSql<D extends DdtDialect> implements IQueueIo {
         db = db ?? await this.#db;
 
         let item = await this.#getItem(itemId, db);
+        if (this.#disposed) return false;
+
         if (item) {
             const customMerge = (objValue: any, srcValue: any) => {
                 if (srcValue === undefined) {
@@ -250,6 +255,7 @@ class QueueIoSql<D extends DdtDialect> implements IQueueIo {
         db = db ?? await this.#db;
 
         let item = await this.#getItem(itemId, db);
+        if (this.#disposed) return false;
         if (item) {
             
             merge<QueueItemDB, Partial<QueueItemDB>>(item, {attempts: item.attempts+1})
@@ -292,9 +298,9 @@ class QueueIoSql<D extends DdtDialect> implements IQueueIo {
 
         await robustTransaction(db, async tx => {
         //await db.transaction(async tx => {
-            
+            if (this.#disposed) return;
+
             latestItem = await this.#getItem(item.id, tx as GenericDatabase);
-            
 
             if (!latestItem || (!force && latestItem.run_id !== item.run_id)) {
                 console.warn(`QueueIDB [${this.#id}] The job running in memory did not match the job instance ID it was started with in the db.`, { latestItem, item });
@@ -326,19 +332,35 @@ class QueueIoSql<D extends DdtDialect> implements IQueueIo {
     }
 
 
-    async dispose(clientId: string) {
+    async dispose(clientId: string, timeoutMs = 1000*20) {
         this.#disposed = true;
+        let progress:string[] = [];
+        const pwt = promiseWithTrigger<void>(timeoutMs);
 
-        if (this.#nextPoll) {
-            clearTimeout(this.#nextPoll);
+        (async () => {
+            if (this.#nextPoll) {
+                clearTimeout(this.#nextPoll);
+            }
+
+            progress.push('cleared next poll');
+            
+            const db = await this.#db;
+            progress.push('retrieved db');
+            await db
+                .delete(this.#queueSchema)
+                .where(eq(this.#queueSchema.queue_id, this.#id));
+        
+            progress.push('complete');
+
+            pwt.trigger();
+        })();
+
+
+        try {
+            await pwt.promise;
+        } catch(e) {
+            throw new Error(`QueueSql dispose timed out. Progress: ${progress.join()}`)
         }
-
-
-        const db = await this.#db;
-        await db
-            .delete(this.#queueSchema)
-            .where(eq(this.#queueSchema.queue_id, this.#id));
-
 
     }
 
