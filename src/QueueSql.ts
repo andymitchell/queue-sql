@@ -93,6 +93,7 @@ class QueueIoSql<D extends DdtDialect> implements IQueueIo {
     async addItem(item: QueueItemDB): Promise<QueueItemDB> {
         const db = await this.#db;
 
+        
         const result = await db
             .insert(this.#queueSchema)
             .values({
@@ -104,6 +105,7 @@ class QueueIoSql<D extends DdtDialect> implements IQueueIo {
                 id: this.#queueSchema.id
             })
 
+        
         const id = result[0]!.id;
 
 
@@ -116,12 +118,13 @@ class QueueIoSql<D extends DdtDialect> implements IQueueIo {
         // TODO Can this be automated with a trigger to do it automatically? If you do, remember to emit MODIFIED here too.
         await this.updateItem(id, item);
 
-
         return item;
     }
 
     async listItems(options?: { updated_after?: Date }) {
+        
         const db = await this.#db;
+        
         if (this.#disposed) return [];
 
         let where: SQL = eq(this.#queueSchema.queue_id, this.#id);
@@ -132,12 +135,19 @@ class QueueIoSql<D extends DdtDialect> implements IQueueIo {
             ) as SQL
         }
 
+        
+
+    
         const result = await db
             .select()
             .from(this.#queueSchema)
             .where(where)
 
+            
         return result.map(x => x.item as QueueItemDB);
+    
+
+        
 
     }
 
@@ -332,23 +342,32 @@ class QueueIoSql<D extends DdtDialect> implements IQueueIo {
     }
 
 
-    async dispose(clientId: string, progressTracker:string[]) {
+    async dispose(clientId: string) {
         this.#disposed = true;
 
+        
     
         if (this.#nextPoll) {
             clearTimeout(this.#nextPoll);
         }
 
-        progressTracker.push('cleared next poll');
-        
         const db = await this.#db;
-        progressTracker.push('retrieved db');
-        await db
-            .delete(this.#queueSchema)
-            .where(eq(this.#queueSchema.queue_id, this.#id));
-    
-        progressTracker.push('deleted from db');
+        try {
+            await db
+                .delete(this.#queueSchema)
+                .where(eq(this.#queueSchema.queue_id, this.#id));
+        } catch(e) {
+            const message = (e as any).message ?? '';
+
+            const closedConnection = message.includes('CONNECTION_ENDED') || message.includes('PGlite is closed');
+            if( closedConnection ) {
+                // Skip it 
+            } else {
+                throw e;
+            }
+        }
+
+        
 
     }
 

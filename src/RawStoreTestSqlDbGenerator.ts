@@ -91,4 +91,9 @@ export class RawStoreTestSqlDbGenerator<D extends DdtDialect = DdtDialect, DR ex
 
         
     }
+
+    async closeAllConnections() {
+        await this.#testSqlDbGenerator.closeAllConnections();
+    }
+    
 }

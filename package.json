@@ -38,7 +38,7 @@
     "node": ">=19.0.0"
   },
   "devDependencies": {
-    "@andyrmitchell/drizzle-fast-bulk-test": "^0.2.2",
+    "@andyrmitchell/drizzle-fast-bulk-test": "^0.3.2",
     "@andyrmitchell/file-io": "^0.10.12",
     "@electric-sql/pglite": "^0.3.5",
     "@libsql/client": "^0.15.10",
@@ -54,7 +54,7 @@
   "dependencies": {
     "@andyrmitchell/drizzle-dialect-types": "^0.0.9",
     "@andyrmitchell/drizzle-robust-transaction": "^0.0.7",
-    "@andyrmitchell/utils": "^0.22.5",
+    "@andyrmitchell/utils": "^0.22.7",
     "drizzle-orm": "^0.36.4",
     "lodash-es": "^4.17.21",
     "uuid": "^9.0.1"

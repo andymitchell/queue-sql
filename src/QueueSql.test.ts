@@ -8,6 +8,7 @@ import { QueueSql } from "./QueueSql.ts";
 import {v4 as uuidV4} from 'uuid';
 import { standardQueueTests } from "@andyrmitchell/utils/queue-testing";
 import type { HaltPromise } from "@andyrmitchell/utils/queue";
+import { sleep } from "@andyrmitchell/utils";
 
 
 const TESTDIR = getRelativeTestDir(import.meta.url);
@@ -116,6 +117,73 @@ standardQueueTests(
         return newQueueSqlSqlite(uuidV4());
     }
 );
+
+
+test('creating with a closed connection can still be disposed [regression on race condition]', async () => {
+    const testDir = getRelativeTestDir(import.meta.url);
+
+    const tdbgPg = new RawStoreTestSqlDbGenerator<'pg'>(
+        TESTDIR, 
+        {
+            db: {
+                dialect: 'pg',
+                driver: 'pglite'
+            },
+            batch_size: 50
+        })
+    const {db, schemas} = await tdbgPg.nextTest();
+
+    const q = new QueueSql('test', db, schemas);
+    await q.dispose();
+
+    
+    await tdbgPg.closeAllConnections();
+
+    
+    // Now satisfy that it has closed the connection (because it won't allow another attempt to run)
+    let errors: Error[] = [];
+    process.addListener('unhandledRejection', (e) => {
+        if( e instanceof Error ) {
+            errors.push(e);
+        }
+    })
+    
+    const q2 = new QueueSql('test', db, schemas);
+    q2.dispose();
+
+    await sleep(100);
+    expect(errors.length>0).toBe(true);
+
+}, 1000*15)
+
+
+test('a disposed database throws an error if try to enqueue', async () => {
+    const testDir = getRelativeTestDir(import.meta.url);
+
+    const tdbgPg = new RawStoreTestSqlDbGenerator<'pg'>(
+        TESTDIR, 
+        {
+            db: {
+                dialect: 'pg',
+                driver: 'pglite'
+            },
+            batch_size: 50
+        })
+    const {db, schemas} = await tdbgPg.nextTest();
+
+    const q = new QueueSql('test', db, schemas);
+    //await q.dispose();
+
+    process.addListener('unhandledRejection', (e) => {
+        // Suppress uncaught errors 
+    })
+    
+    await tdbgPg.closeAllConnections();
+
+    await expect(q.enqueue(() => {})).rejects.toThrow('PGlite is closed');
+    
+
+}, 1000*15)
 
 
 test('postgres-rmw works', async () => {
