@@ -7,7 +7,7 @@ import { QueueSql } from "./QueueSql.ts";
 
 import {v4 as uuidV4} from 'uuid';
 import { standardQueueTests } from "@andyrmitchell/utils/queue-testing";
-import type { HaltPromise } from "@andyrmitchell/utils/queue";
+import type { HaltPromise, QueueConstructorOptions } from "@andyrmitchell/utils/queue";
 import { sleep } from "@andyrmitchell/utils";
 
 
@@ -28,13 +28,13 @@ const tdbgPg = new RawStoreTestSqlDbGenerator<'pg'>(
         batch_size: 50
     });
 let queueSqlsPg:Record<string, Promise<QueueSql>> = {};
-async function newQueueSqlPg(queueName:string):Promise<QueueSql> {
+async function newQueueSqlPg(queueName:string, options?: QueueConstructorOptions):Promise<QueueSql> {
     if( !queueSqlsPg[queueName] ) {
 
         
         queueSqlsPg[queueName] = new Promise(async accept => {
             const {db, schemas} = await tdbgPg.nextTest();
-            const queueSql = new QueueSql(queueName, Promise.resolve(db), schemas);
+            const queueSql = new QueueSql(queueName, Promise.resolve(db), schemas, options);
 
             accept(queueSql);
         })
@@ -54,7 +54,7 @@ const tdbgSqlite = new RawStoreTestSqlDbGenerator<'sqlite'>(
         batch_size: 50
     });
 let queueSqlsSqlite:Record<string, Promise<QueueSql>> = {};
-async function newQueueSqlSqlite(queueName:string):Promise<QueueSql> {
+async function newQueueSqlSqlite(queueName:string, options?: QueueConstructorOptions):Promise<QueueSql> {
     if( !queueSqlsSqlite[queueName] ) {
 
         
@@ -65,7 +65,7 @@ async function newQueueSqlSqlite(queueName:string):Promise<QueueSql> {
             const rows = await db.select().from(schemas);
             
 
-            const queueSql = new QueueSql(queueName, Promise.resolve(db), schemas);
+            const queueSql = new QueueSql(queueName, Promise.resolve(db), schemas, options);
 
             accept(queueSql);
         })
@@ -92,13 +92,13 @@ standardQueueTests(
     test, 
     expect, 
     () => {
-        return (async <T>(queueName:string, onRun:(...args: any[]) => T | PromiseLike<T>, descriptor?: string, halt?: HaltPromise, enqueuedCallback?: () => void) => {
-            const queueIDB = await newQueueSqlPg(queueName);
+        return (async <T>(queueName:string, onRun:(...args: any[]) => T | PromiseLike<T>, descriptor?: string, halt?: HaltPromise, enqueuedCallback?: () => void, options?:QueueConstructorOptions) => {
+            const queueIDB = await newQueueSqlPg(queueName, options);
             return await queueIDB.enqueue<T>(onRun, descriptor, halt, enqueuedCallback);
         })
     },
-    async () => {
-        return newQueueSqlPg(uuidV4());
+    async (options) => {
+        return newQueueSqlPg(uuidV4(), options);
     }
 );
 
@@ -108,13 +108,13 @@ standardQueueTests(
     test, 
     expect, 
     () => {
-        return (async <T>(queueName:string, onRun:(...args: any[]) => T | PromiseLike<T>, descriptor?: string, halt?: HaltPromise, enqueuedCallback?: () => void) => {
-            const queueIDB = await newQueueSqlSqlite(queueName);
+        return (async <T>(queueName:string, onRun:(...args: any[]) => T | PromiseLike<T>, descriptor?: string, halt?: HaltPromise, enqueuedCallback?: () => void, options?:QueueConstructorOptions) => {
+            const queueIDB = await newQueueSqlSqlite(queueName, options);
             return await queueIDB.enqueue<T>(onRun, descriptor, halt, enqueuedCallback);
         })
     },
-    async () => {
-        return newQueueSqlSqlite(uuidV4());
+    async (options) => {
+        return newQueueSqlSqlite(uuidV4(), options);
     }
 );
 

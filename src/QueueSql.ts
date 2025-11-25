@@ -18,9 +18,10 @@ import type { QueueTable } from "./table-creators/types.ts";
 import { robustTransaction } from "@andyrmitchell/drizzle-robust-transaction";
 import { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import type { DdtDialect, DdtDialectDatabaseMap } from "@andyrmitchell/drizzle-dialect-types";
-import { BaseItemQueue, type IQueue, type IQueueIo, type QueueIoEvents } from "@andyrmitchell/utils/queue";
+import { type IQueue, type IQueueIo, type QueueConstructorOptions, type QueueIoEvents } from "@andyrmitchell/utils/queue";
 import { TypedCancelableEventEmitter } from "@andyrmitchell/utils/typed-cancelable-event-emitter";
 import { uid } from "@andyrmitchell/utils/uid";
+import {  BaseItemQueue } from "@andyrmitchell/utils/queue-base";
 
 
 
@@ -29,8 +30,8 @@ import { uid } from "@andyrmitchell/utils/uid";
 
 export class QueueSql<D extends DdtDialect = DdtDialect> extends BaseItemQueue implements IQueue {
 
-    constructor(id: string, db: DdtDialectDatabaseMap[D] | PromiseLike<DdtDialectDatabaseMap[D]>, queueSchema: QueueTable[D]) {
-        super(id, new QueueIoSql(id, db, queueSchema));
+    constructor(id: string, db: DdtDialectDatabaseMap[D] | PromiseLike<DdtDialectDatabaseMap[D]>, queueSchema: QueueTable[D], options?: QueueConstructorOptions) {
+        super(id, new QueueIoSql(id, db, queueSchema), options);
 
 
     }
