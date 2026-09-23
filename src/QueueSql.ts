@@ -15,7 +15,7 @@ import { eq, and, SQL, gte } from "drizzle-orm";
 import type { GenericDatabase, QueueItemDB } from "./types.ts";
 import { merge, mergeWith } from "lodash-es";
 import type { QueueTable } from "./table-creators/types.ts";
-import { robustTransaction } from "@andyrmitchell/drizzle-robust-transaction";
+import { robustTransaction } from "@andymitchell/drizzle-robust-transaction";
 import { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import type { DdtDialect, DdtDialectDatabaseMap } from "@andyrmitchell/drizzle-dialect-types";
 import { type IQueue, type IQueueIo, type QueueConstructorOptions, type QueueIoEvents } from "@andymitchell/utils/queue";
