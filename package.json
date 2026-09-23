@@ -3,6 +3,7 @@
   "version": "0.3.0",
   "description": "Queue function execution using sql to manage it. This is NOT a full job queue, it just enforces linearity in one apps execution path.",
   "type": "module",
+  "sideEffects": false,
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
