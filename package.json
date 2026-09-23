@@ -53,7 +53,7 @@
     "vitest": "^3.0.7"
   },
   "dependencies": {
-    "@andymitchell/utils": "^1.0.0",
+    "@andymitchell/utils": "^0.33.0",
     "@andyrmitchell/drizzle-dialect-types": "^0.0.9",
     "@andyrmitchell/drizzle-robust-transaction": "^0.0.7",
     "drizzle-orm": "^0.36.4",
