@@ -1,5 +1,5 @@
 {
-  "name": "@andyrmitchell/queue-sql",
+  "name": "@andymitchell/queue-sql",
   "version": "0.3.0",
   "description": "Queue function execution using sql to manage it. This is NOT a full job queue, it just enforces linearity in one apps execution path.",
   "type": "module",
@@ -17,6 +17,7 @@
     "README.md"
   ],
   "publishConfig": {
+    "registry": "https://npm.pkg.github.com",
     "access": "public"
   },
   "scripts": {
@@ -52,9 +53,9 @@
     "vitest": "^3.0.7"
   },
   "dependencies": {
+    "@andymitchell/utils": "^1.0.0",
     "@andyrmitchell/drizzle-dialect-types": "^0.0.9",
     "@andyrmitchell/drizzle-robust-transaction": "^0.0.7",
-    "@andyrmitchell/utils": "^0.25.3",
     "drizzle-orm": "^0.36.4",
     "lodash-es": "^4.17.21",
     "uuid": "^9.0.1"

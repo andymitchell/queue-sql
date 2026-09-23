@@ -1,7 +1,7 @@
 
 
 import type { DdtDialectDatabaseMap } from "@andyrmitchell/drizzle-dialect-types";
-import type { BaseItem } from "@andyrmitchell/utils/queue-base";
+import type { BaseItem } from "@andymitchell/utils/queue-base";
 
 
 export type GenericDatabase = DdtDialectDatabaseMap['pg'];

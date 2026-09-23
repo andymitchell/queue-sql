@@ -1,5 +1,5 @@
 
-import { isTypeEqual, typeHasKeys } from "@andyrmitchell/utils";
+import { isTypeEqual, typeHasKeys } from "@andymitchell/utils";
 import { type QueueTableSelectPg, type QueueTablePg, type QueueTableCreatorPg, type QueueTableInsertPg } from "./queue.pg.ts";
 
 
